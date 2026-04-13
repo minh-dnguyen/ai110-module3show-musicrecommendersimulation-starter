@@ -17,17 +17,31 @@ Replace this paragraph with your own summary of what your version does.
 
 ## How The System Works
 
-Explain your design in plain language.
+This music recommender system uses a content-based filtering approach, focusing on matching song attributes to user preferences. It prioritizes "vibe match" by scoring songs based on genre, mood, energy level, and acoustic preference.
 
-Some prompts to answer:
+### Data Flow Overview
 
-- What features does each `Song` use in your system
-  - For example: genre, mood, energy, tempo
-- What information does your `UserProfile` store
-- How does your `Recommender` compute a score for each song
-- How do you choose which songs to recommend
+1. **Input**: User preferences (favorite genre, mood, target energy, acoustic preference)
+2. **Process**: Load songs from CSV, score each song using weighted criteria
+3. **Output**: Rank songs by score and return top K recommendations
 
-You can include a simple diagram or bullet list if helpful.
+### CLI Output Example
+
+Below is a screenshot of the recommendation output in the terminal for the default `pop/happy` profile.
+
+![Terminal recommendations](./terminal_recommendations.png)
+
+### Algorithm Recipe
+
+- **Genre Match**: +2.0 points if song genre matches user favorite (highest weight, as genre is most defining)
+- **Mood Match**: +1.0 point if song mood matches user favorite
+- **Energy Similarity**: Up to +1.5 points based on closeness to target energy (1.5 \* (1.0 - |song.energy - user.target_energy|))
+- **Acoustic Bonus**: +0.5 points if user likes acoustic and song acousticness > 0.5
+- **Total Score**: Sum of above; songs with score > 0 are ranked descending
+
+### Potential Biases
+
+This system might over-prioritize genre matches, potentially ignoring great songs that strongly match the user's mood or energy but have a different genre. It assumes categorical matches (genre/mood) are more important than numerical similarity, which may not reflect all user preferences. The acoustic bonus is minor and only applies to acoustic-leaning users, avoiding over-influence.
 
 ---
 
@@ -41,6 +55,8 @@ You can include a simple diagram or bullet list if helpful.
    python -m venv .venv
    source .venv/bin/activate      # Mac or Linux
    .venv\Scripts\activate         # Windows
+
+   ```
 
 2. Install dependencies
 
@@ -101,12 +117,11 @@ Write 1 to 2 paragraphs here about what you learned:
 - about how recommenders turn data into predictions
 - about where bias or unfairness could show up in systems like this
 
-
 ---
 
 ## 7. `model_card_template.md`
 
-Combines reflection and model card framing from the Module 3 guidance. :contentReference[oaicite:2]{index=2}  
+Combines reflection and model card framing from the Module 3 guidance. :contentReference[oaicite:2]{index=2}
 
 ```markdown
 # 🎧 Model Card - Music Recommender Simulation
@@ -158,6 +173,7 @@ Describe your dataset.
 Where does your recommender work well
 
 You can think about:
+
 - Situations where the top results "felt right"
 - Particular user profiles it served well
 - Simplicity or transparency benefits
@@ -169,6 +185,7 @@ You can think about:
 Where does your recommender struggle
 
 Some prompts:
+
 - Does it ignore some genres or moods
 - Does it treat all users as if they have the same taste shape
 - Is it biased toward high energy or one genre by default
@@ -181,6 +198,7 @@ Some prompts:
 How did you check your system
 
 Examples:
+
 - You tried multiple user profiles and wrote down whether the results matched your expectations
 - You compared your simulation to what a real app like Spotify or YouTube tends to recommend
 - You wrote tests for your scoring logic
@@ -208,4 +226,4 @@ A few sentences about what you learned:
 - What surprised you about how your system behaved
 - How did building this change how you think about real music recommenders
 - Where do you think human judgment still matters, even if the model seems "smart"
-
+```

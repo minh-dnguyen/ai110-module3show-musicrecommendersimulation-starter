@@ -50,15 +50,64 @@ def load_songs(csv_path: str) -> List[Dict]:
     Loads songs from a CSV file.
     Required by src/main.py
     """
-    # TODO: Implement CSV loading logic
-    print(f"Loading songs from {csv_path}...")
-    return []
+    import csv
+    songs = []
+    with open(csv_path, 'r', newline='') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            # Convert numerical values
+            row['id'] = int(row['id'])
+            row['energy'] = float(row['energy'])
+            row['tempo_bpm'] = float(row['tempo_bpm'])
+            row['valence'] = float(row['valence'])
+            row['danceability'] = float(row['danceability'])
+            row['acousticness'] = float(row['acousticness'])
+            songs.append(row)
+    return songs
 
-def recommend_songs(user_prefs: Dict, songs: List[Dict], k: int = 5) -> List[Tuple[Dict, float, str]]:
+def score_song(user_prefs: Dict, song: Dict) -> Tuple[float, List[str]]:
+    """
+    Scores a song based on user preferences and returns score with reasons.
+    """
+    score = 0.0
+    reasons = []
+    
+    # Genre match: +2.0
+    if song['genre'] == user_prefs['genre']:
+        score += 2.0
+        reasons.append("genre match (+2.0)")
+    
+    # Mood match: +1.0
+    if song['mood'] == user_prefs['mood']:
+        score += 1.0
+        reasons.append("mood match (+1.0)")
+    
+    # Energy similarity: up to +1.5
+    energy_diff = abs(song['energy'] - user_prefs['energy'])
+    energy_score = 1.5 * (1.0 - energy_diff)
+    score += energy_score
+    reasons.append(f"energy similarity (+{energy_score:.2f})")
+    
+    # Acoustic bonus: +0.5 if applicable
+    if user_prefs.get('likes_acoustic', False) and song['acousticness'] > 0.5:
+        score += 0.5
+        reasons.append("acoustic preference (+0.5)")
+    
+    return score, reasons
+
+def recommend_songs(user_prefs: Dict, songs: List[Dict], k: int = 5) -> List[Tuple[Dict, float, List[str]]]:
     """
     Functional implementation of the recommendation logic.
     Required by src/main.py
     """
-    # TODO: Implement scoring and ranking logic
-    # Expected return format: (song_dict, score, explanation)
-    return []
+    scored_songs = []
+    for song in songs:
+        score, reasons = score_song(user_prefs, song)
+        scored_songs.append((song, score, reasons))
+    
+    # Sort by score descending (highest first)
+    # sorted() returns a new list, unlike .sort() which modifies in place
+    sorted_songs = sorted(scored_songs, key=lambda x: x[1], reverse=True)
+    
+    # Return top k
+    return sorted_songs[:k]
